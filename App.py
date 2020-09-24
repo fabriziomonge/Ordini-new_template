@@ -61,7 +61,7 @@ try:
 
         if uploaded_file1 is not None:
 
-            df=pd.read_excel(uploaded_file1, header=4)
+            df=pd.read_excel(uploaded_file1, header=3)
             st.write("""### File Amazon importato""")
             df_show = df.head(3)
             df_show
@@ -78,7 +78,7 @@ try:
 
             if lista_colonne_inserita[:len(lista_colonne_corretta)] == lista_colonne_corretta:
                 st.write("""#### il formato inserito corrisponde al template""")
-                st.write("""### Procedo con l'elaborazione dei dati....""")
+                
                 controllo = True
             else:
                 st.write("""### Il formato del "File azienda" inserito non corrisponde al template""")
@@ -89,37 +89,42 @@ try:
                     df1 = pd.DataFrame(df1.values, columns = lista_colonne_inserita)
                     controllo = True
                     st.write("""### Il formato del file è stato sistemato""")
-                    st.write("""### Procedo con l'elaborazione dei dati....""")
+                    
 
-        if uploaded_file1 is not None and uploaded_file2 is not None and controllo == True:
-
-            if df['Numero OdA'][0] != df1['Numero OdA/Ordine'][0]:
+            if df['PO Number'][0] != df1['Numero OdA/Ordine'][0]:
                 st.write("""### > Attenzione, i due files corrispondono ad ordini differenti""")
 
             else:
                 st.write("""### > Controllo N° odine superato con esito positivo""")
 
+        if uploaded_file1 is not None and uploaded_file2 is not None and controllo == True:
+
+                st.write("""### Procedo con l'elaborazione dei dati....""")
+
                 # df=pd.read_excel(uploaded_file1, header=4)
 
-                #creo univoco etichette
+                #creo univoco etichette modifica con nuovo file
 
-                lista_etichette_univoci = list(df['Codice di riferimento corriere'].unique())
+                lista_etichette_univoci = []
+                lista_colonne = list(df.columns)
+                for i in range(9,len(df.columns),3):
+                    lista_etichette_univoci.append(lista_colonne[i])
                 
                 df_etichette_univoci = pd.DataFrame(lista_etichette_univoci, index=range(1,len(lista_etichette_univoci)+1), columns=['Etichetta'])
-
+                
+                
                 #Creo univoco prodotti
-                lista_prodotti_univoci = list(df['Titolo'].unique())
+                lista_prodotti_univoci = list(df['Title'].unique())
                 lista_prodotti_univoci = pd.DataFrame(lista_prodotti_univoci, columns=['prodotto'])
                 lista_prodotti_univoci['progressivo']=lista_prodotti_univoci.index
                 lista_prodotti_univoci = lista_prodotti_univoci.set_index('prodotto', drop=True)
 
+                
+
                 #creo un dataframe di prodotti univoci
 
-
-
-                #Importo il file di Bongiovanni
-
-                # df1 = pd.read_excel(uploaded_file2)
+                
+                #Sistemo i "collo a" che non sono valorizzati
                 df1['collo a'] = df1['collo a'].fillna(df1['collo da'])
 
                 # elimino i non confermati
@@ -219,6 +224,7 @@ try:
                     lista_etichetta.append(etichetta)
                 df_lavorato['Codice di riferimento corriere']=lista_etichetta
 
+                
 
                 # faccio in modo da ricopiare i campi [Confermati, ID esterno, NUmero mod, Asin] di Amazon (df)
                 lista_confermati = []
@@ -227,12 +233,12 @@ try:
                 lista_asin =[]
 
                 for i in df_lavorato.Titolo:
-                    settore = df.loc[df.Titolo== i].head(1)
+                    settore = df.loc[df.Title== i].head(1)
                     settore = settore.reset_index(drop=True)
 
-                    quantita = settore['Confermati'][0]
-                    id = settore['ID esterno'][0]
-                    modello = settore['Numero modello'][0]
+                    quantita = settore['Confirmed'][0] #Tradotto
+                    id = settore['External ID'][0] #Tradotto
+                    modello = settore['Model Number'][0] #Tradotto
                     asin = settore['ASIN'][0]
 
                     lista_confermati.append(int(quantita))
@@ -263,46 +269,63 @@ try:
                 df_differenti['Dichiarati'] = lista_differenti_dic
                 df_differenti['In spedizione'] = lista_differenti_conf
                 df_differenti = df_differenti.groupby('Titolo').last()
-                
-
-                # Compilo il df definitivo
-
-                df_definitivo = pd.DataFrame(df_lavorato['Codice di riferimento corriere'])
-                df_definitivo['Numero OdA'] = df_lavorato['Numero OdA/Ordine']
-                df_definitivo['ID esterno'] = df_lavorato['Numero esterno']
-                df_definitivo['Numero modello'] = df_lavorato['Numero modello']
-                df_definitivo['Titolo'] = df_lavorato['Titolo']
-                df_definitivo['ASIN'] = df_lavorato['ASIN']
-                df_definitivo['Confermati'] = df_lavorato['Quantita confermata']
-                df_definitivo['ASN precedenti'] = df['ASN precedenti']
-                df_definitivo['Spediti'] = df_lavorato['Quantita spedita']
-                df_definitivo['Data di scadenza (solo per prodotti deperibili)'] = df_lavorato['scadenza']
-                df_definitivo['Numero del lotto(se applicabile)'] = df_lavorato['lotto']
-
 
                 # ricopio il numero esterno e il lotto come stringhe
 
-                lista_n_est = list(df_definitivo['ID esterno'])
+                lista_n_est = list(df_lavorato['Numero esterno'])
                 lista_n_est_str = []
                 for i in lista_n_est:
                     stringa = str(i)
                     lista_n_est_str.append(stringa)
 
-                df_definitivo['ID esterno'] = lista_n_est_str
+                df_lavorato['Numero esterno'] = lista_n_est_str
 
-                lista_lotto = list(df_definitivo['Numero del lotto(se applicabile)'])
+                lista_lotto = list(df_lavorato['lotto'])
                 lista_lotto_str = []
                 for i in lista_lotto:
                     stringa = str(i)
                     lista_lotto_str.append(stringa)
 
-                df_definitivo['Numero del lotto(se applicabile)'] = lista_lotto_str
+                df_lavorato['lotto'] = lista_lotto_str
+                
+                
 
+                # Compilo il df definitivo
+                # Estraggo ogni riga del df amazon e la ricopio appendendola a df_definitivo emodifico a mano a mano le colonne individuate
+
+                
+                df_definitivo = pd.DataFrame(columns=list(df.columns))
+                
+
+                for riga_n in range(len(df)):
+                    riga = df.loc[df.index==riga_n]
+
+                    i = riga['Title'][riga_n]
+                    estratto = df_lavorato.loc[df_lavorato.Titolo == i]
+                    estratto = estratto.reset_index(drop=True)
+
+                    for ii in range(len(estratto)):
+                        # st.write(riga_n)
+                        etichetta =  estratto['Codice di riferimento corriere'][ii]
+                        boxes = estratto['Quantita spedita'][ii]
+                        scadenza = estratto['scadenza'][ii]
+                        lotto = str(estratto['lotto'][ii])
+                        riga.at[riga_n, etichetta] = boxes
+                        cella_exp = "Box "+ str(estratto['collo'][ii]) + " - Exp. Date"
+                        riga.at[riga_n, cella_exp] = scadenza
+                        cella_lotto = "Box "+ str(estratto['collo'][ii]) + " - Lot No."
+                        riga[cella_lotto] = riga[cella_lotto].astype(str)
+                        riga.at[riga_n, cella_lotto] = lotto
+            
+                    df_definitivo = df_definitivo.append(riga)
+                
+                                                
+                ##Da qua non modificare
 
                 st.write("""### Vista del file elaborato""")
                 df_definitivo
                 
-                df_definitivo.to_excel('dati_ordini.xlsx')
+                df_definitivo.to_excel('dati_ordini_nuovo_temp.xlsx')
                 
                 # Alcune misure
                 colli_presenti= list(df_lavorato.collo.unique())
@@ -311,7 +334,7 @@ try:
                 
                 Colli_tot_necessari = len(colli_necessari)
                 Colli_totali_presenti = len(colli_presenti)
-                Totale_articoli = df_definitivo.Spediti.sum()
+                Totale_articoli = df_lavorato['Quantita spedita'].sum()
                 
                 st.write("""### > Verifiche sul numero articoli e colli:""" )
                 st.write("""#### Sono richiesti""",Colli_tot_necessari,""" Colli""" )
@@ -376,17 +399,20 @@ try:
                     ftp = FTP('ftp.onstatic-it.setupdns.net')     # connect to host, default port
                     ftp.login(user='fabrizio.monge', passwd='Ciuciuska88')
                     ftp.cwd('Bongiovanni') 
-                    file = open('dati_ordini.xlsx', 'rb')
-                    ftp.storbinary('STOR dati_ordini.xlsx', file)
+                    file = open('dati_ordini_nuovo_temp.xlsx', 'rb')
+                    ftp.storbinary('STOR dati_ordini_nuovo_temp.xlsx', file)
                     file.close()
                     ftp.quit()
                     print('Ordini caricati sul server')
 
                     
                     st.write("""### > Assicurati che i controlli siano corretti e scarica il file elaborato a questo link:""", color="red")
-                    st.write('http://www.sphereresearch.net/Bongiovanni/dati_ordini.xlsx')
+                    st.write('http://www.sphereresearch.net/Bongiovanni/dati_ordini_nuovo_temp.xlsx')
 
-    else:
-        st.write("""#### Credenziali non abilitate""")
+                #     df_definitivo
+                #     df_lavorato
+
+        else:
+            st.write("""#### Credenziali non abilitate""")
 except:
     st.write("Inserire credenziali valide")
