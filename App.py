@@ -3,6 +3,12 @@
 
 # In[ ]:
 
+
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[ ]:
+
 import base64
 import pandas as pd
 import streamlit as st
@@ -115,7 +121,7 @@ try:
                 
                 
                 #Creo univoco prodotti
-                lista_prodotti_univoci = list(df['Title'].unique())
+                lista_prodotti_univoci = list(df['ASIN'].unique())
                 lista_prodotti_univoci = pd.DataFrame(lista_prodotti_univoci, columns=['prodotto'])
                 lista_prodotti_univoci['progressivo']=lista_prodotti_univoci.index
                 lista_prodotti_univoci = lista_prodotti_univoci.set_index('prodotto', drop=True)
@@ -233,8 +239,8 @@ try:
                 lista_modello = []
                 lista_asin =[]
 
-                for i in df_lavorato.Titolo:
-                    settore = df.loc[df.Title== i].head(1)
+                for i in df_lavorato.ASIN:
+                    settore = df.loc[df.ASIN== i].head(1)
                     settore = settore.reset_index(drop=True)
 
                     quantita = settore['Confirmed'][0] #Tradotto
@@ -420,3 +426,4 @@ except:
             st.write("ERRORE! Verifica i file che sono stati caricati")
     else:
             pass
+
