@@ -415,4 +415,4 @@ try:
     else:
             st.write("""#### Credenziali non abilitate""")
 except:
-    st.write("Inserire credenziali valide")
+    st.write("ERRORE! Verifica i file che sono stati caricati")
