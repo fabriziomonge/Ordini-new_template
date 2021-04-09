@@ -42,6 +42,7 @@ st.write("""
 Utente = st.text_input("Inserire il nome utente")
 Psw = st.text_input("Inserire la password", type='password')
 
+uploaded_file1 = None
 
 try:
     
