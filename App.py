@@ -415,4 +415,7 @@ try:
     else:
             st.write("""#### Credenziali non abilitate""")
 except:
-    st.write("ERRORE! Verifica i file che sono stati caricati")
+    if uploaded_file1 is not None:
+            st.write("ERRORE! Verifica i file che sono stati caricati")
+    else:
+            pass
