@@ -307,8 +307,8 @@ try:
                 for riga_n in range(len(df)):
                     riga = df.loc[df.index==riga_n]
 
-                    i = riga['Title'][riga_n]
-                    estratto = df_lavorato.loc[df_lavorato.Titolo == i]
+                    i = riga['ASIN'][riga_n]
+                    estratto = df_lavorato.loc[df_lavorato.ASIN == i]
                     estratto = estratto.reset_index(drop=True)
 
                     for ii in range(len(estratto)):
